@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="CENTER" spacing="20" style="-fx-background-color: #f9fafb;"
+      xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+      fx:controller="at.ac.hcw.chatty.controller.ConnectionScreenController">
+
+    <padding>
+        <Insets top="40" right="40" bottom="40" left="40"/>
+    </padding>
+
+    <!-- Logo & Title -->
+    <Label text="💬" style="-fx-font-size: 48px;"/>
+    <Label text="Chatty" style="-fx-font-size: 32px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+    <Label text="Simple Chat Tool" style="-fx-font-size: 14px; -fx-text-fill: #6b7280;"/>
+
+    <Region prefHeight="20"/>
+
+    <!-- Input Section -->
+    <VBox spacing="10" alignment="CENTER">
+        <!-- IP Address -->
+        <VBox spacing="5">
+            <Label text="IP-Adresse / Hostname"
+                   style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <TextField fx:id="ipInput" promptText="z.B. 192.168.1.100 oder localhost"
+                       prefWidth="300" style="-fx-font-size: 13px; -fx-padding: 10px;"/>
+        </VBox>
+
+        <!-- Port -->
+        <VBox spacing="5">
+            <Label text="Port"
+                   style="-fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+            <TextField fx:id="portInput" promptText="z.B. 8080"
+                       prefWidth="300" style="-fx-font-size: 13px; -fx-padding: 10px;"/>
+        </VBox>
+    </VBox>
+
+    <!-- Connect Button -->
+    <Button text="Verbinden" onAction="#handleConnect"
+            prefWidth="300" prefHeight="40"
+            style="-fx-background-color: #2563eb; -fx-text-fill: white;
+                   -fx-font-size: 14px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+
+    <Label text="oder" style="-fx-font-size: 12px; -fx-text-fill: #6b7280;"/>
+
+    <!-- Server Mode Button -->
+    <Button text="Server-Modus (auf Verbindung warten)" onAction="#handleServerMode"
+            prefWidth="300" prefHeight="35"
+            style="-fx-background-color: #10b981; -fx-text-fill: white;
+                   -fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+
+    <Separator prefWidth="300"/>
+
+    <Label text="Status: Nicht verbunden"
+           style="-fx-font-size: 11px; -fx-text-fill: #6b7280;"/>
+</VBox>

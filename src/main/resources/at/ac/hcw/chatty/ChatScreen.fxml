@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="at.ac.hcw.chatty.controller.ChatScreenController">
+
+    <!-- Header -->
+    <top>
+        <HBox spacing="10" alignment="CENTER_LEFT"
+              style="-fx-background-color: #2563eb; -fx-padding: 15;">
+
+            <VBox spacing="3">
+                <Label text="Chatty"
+                       style="-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+                <Label fx:id="connectionLabel" text="Verbunden: ..."
+                       style="-fx-font-size: 10px; -fx-text-fill: #bfdbfe;"/>
+            </VBox>
+
+            <Region HBox.hgrow="ALWAYS"/>
+
+            <Button text="Trennen" onAction="#handleDisconnect"
+                    style="-fx-background-color: #dc2626; -fx-text-fill: white;
+                           -fx-font-size: 12px; -fx-font-weight: bold;
+                           -fx-cursor: hand; -fx-padding: 8 15 8 15;"/>
+        </HBox>
+    </top>
+
+    <!-- Chat Area -->
+    <center>
+        <ScrollPane fx:id="chatScrollPane" fitToWidth="true"
+                    style="-fx-background-color: white;">
+            <VBox fx:id="chatContainer" spacing="10"
+                  style="-fx-background-color: white; -fx-padding: 15;"/>
+        </ScrollPane>
+    </center>
+
+    <!-- Bottom Section -->
+    <bottom>
+        <VBox>
+            <!-- Input Area -->
+            <HBox spacing="10" style="-fx-background-color: #e5e7eb; -fx-padding: 15;">
+                <TextField fx:id="messageInput" promptText="Nachricht eingeben..."
+                           onAction="#handleSend"
+                           prefHeight="40" HBox.hgrow="ALWAYS"
+                           style="-fx-font-size: 13px;"/>
+
+                <Button text="Senden" onAction="#handleSend"
+                        prefWidth="80" prefHeight="40"
+                        style="-fx-background-color: #2563eb; -fx-text-fill: white;
+                               -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </HBox>
+
+            <!-- Status Bar -->
+            <HBox alignment="CENTER" style="-fx-background-color: #d1d5db; -fx-padding: 8 15 8 15;">
+                <Label fx:id="statusLabel" text="Status: ● Verbunden"
+                       style="-fx-font-size: 10px; -fx-text-fill: #059669; -fx-font-weight: bold;"/>
+            </HBox>
+        </VBox>
+    </bottom>
+
+</BorderPane>
