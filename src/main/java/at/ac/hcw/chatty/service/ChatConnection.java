@@ -13,34 +13,27 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class ChatConnection {
-    private static Map<Long, ChatConnection> instances = new HashMap<>();
+    private static ChatConnection currentInstance;
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
     private Thread receiveThread;
     private Consumer<String> onMessageReceived;
     private Runnable onDisconnected;
-    private long instanceId;
 
-    private ChatConnection() {
-        this.instanceId = System.currentTimeMillis() + (long)(Math.random() * 1000);
-    }
+    private ChatConnection() {}
 
     public static ChatConnection getInstance() {
-        // Create unique instance per JavaFX Application Thread context
-        long threadId = Thread.currentThread().getId();
-
-        // Use a combination of thread ID and timestamp for uniqueness
-        if (!instances.containsKey(threadId)) {
-            instances.put(threadId, new ChatConnection());
+        if (currentInstance == null) {
+            currentInstance = new ChatConnection();
         }
-        return instances.get(threadId);
+        return currentInstance;
     }
 
     // Get instance by ID (for multiple windows in same app)
     public static ChatConnection getNewInstance() {
         ChatConnection connection = new ChatConnection();
-        instances.put(connection.instanceId, connection);
+        currentInstance = connection;
         return connection;
     }
 
@@ -67,13 +60,18 @@ public class ChatConnection {
         receiveThread = new Thread(() -> {
             try {
                 String message;
+                System.out.println("📡 Empfangs-Thread gestartet...");
                 while ((message = in.readLine()) != null) {
                     final String msg = message;
+                    System.out.println("📩 Nachricht empfangen: " + msg);
                     if (onMessageReceived != null) {
                         Platform.runLater(() -> onMessageReceived.accept(msg));
+                    } else {
+                        System.out.println("⚠️ onMessageReceived ist null!");
                     }
                 }
             } catch (IOException e) {
+                System.out.println("⚠️ Empfangs-Thread beendet: " + e.getMessage());
                 if (onDisconnected != null) {
                     Platform.runLater(() -> onDisconnected.run());
                 }
@@ -86,6 +84,7 @@ public class ChatConnection {
     public void sendMessage(String message) {
         if (out != null && !message.trim().isEmpty()) {
             out.println(message);
+            System.out.println("📤 Nachricht gesendet: " + message);
         }
     }
 
