@@ -12,8 +12,8 @@
     </padding>
 
     <Label text="💬" style="-fx-font-size: 48px;"/>
-    <Label text="Chatty Advanced" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
-    <Label text="Multi-Room Chat System" style="-fx-font-size: 14px; -fx-text-fill: #6b7280;"/>
+    <Label text="Chatty" style="-fx-font-size: 28px; -fx-font-weight: bold; -fx-text-fill: #1f2937;"/>
+    <Label text="Simple Chat Tool" style="-fx-font-size: 14px; -fx-text-fill: #6b7280;"/>
 
     <Label text="💡 Tipp: Starte Server-Modus zuerst, dann Client-Modus"
            style="-fx-font-size: 11px; -fx-text-fill: #3b82f6; -fx-font-weight: bold;"/>
