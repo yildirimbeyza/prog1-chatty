@@ -2,125 +2,83 @@ package at.ac.hcw.chatty.controller;
 
 import at.ac.hcw.chatty.ChattyApp;
 import at.ac.hcw.chatty.model.ConnectionInfo;
-import at.ac.hcw.chatty.service.ChatConnection;
+
+import at.ac.hcw.chatty.service.ChatServer;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
+import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.stage.Stage;
 
 public class ConnectionScreenController {
     @FXML
-    private TextField ipInput;
+    private TextField usernameInput;
 
     @FXML
     private TextField portInput;
 
-    private ChatConnection connection;
+    @FXML
+    private RadioButton clientMode;
+
+    @FXML
+    private RadioButton serverMode;
+
+    private ToggleGroup modeGroup;
 
     @FXML
     public void initialize() {
-        // Suggest different ports for easier testing
-        int suggestedPort = 8080 + (int)(Math.random() * 100);
-        portInput.setText(String.valueOf(suggestedPort));
+        modeGroup = new ToggleGroup();
+        clientMode.setToggleGroup(modeGroup);
+        serverMode.setToggleGroup(modeGroup);
+        clientMode.setSelected(true);
 
-        // Default to localhost for easy testing
-        ipInput.setText("localhost");
-
-        // Create new connection instance for this window
-        connection = ChatConnection.getNewInstance();
+        int randomPort = 8080 + (int)(Math.random() * 100);
+        portInput.setText(String.valueOf(randomPort));
+        usernameInput.setText("User" + (int)(Math.random() * 1000));
     }
 
     @FXML
-    private void handleConnect() {
-        String host = ipInput.getText().trim();
+    private void handleStart() {
+        String username = usernameInput.getText().trim();
         String portStr = portInput.getText().trim();
 
-        if (host.isEmpty() || portStr.isEmpty()) {
-            showError("Eingabefehler", "Bitte IP-Adresse und Port eingeben!");
+        if (username.isEmpty()) {
+            showError("Eingabefehler", "Bitte Username eingeben!");
             return;
         }
 
         try {
             int port = Integer.parseInt(portStr);
-            if (port < 1 || port > 65535) {
-                showError("Ungültiger Port", "Port muss zwischen 1 und 65535 liegen!");
-                return;
+
+            if (serverMode.isSelected()) {
+                startServer(port);
+            } else {
+                showRoomList(username, "localhost", port);
             }
-
-            connectToServer(host, port);
-
         } catch (NumberFormatException e) {
             showError("Ungültiger Port", "Port muss eine Zahl sein!");
         }
     }
 
-    @FXML
-    private void handleServerMode() {
-        String portStr = portInput.getText().trim();
-
+    private void startServer(int port) {
         try {
-            int port = Integer.parseInt(portStr);
-            if (port < 1 || port > 65535) {
-                showError("Ungültiger Port", "Port muss zwischen 1 und 65535 liegen!");
-                return;
-            }
-
-            startServerMode(port);
-
-        } catch (NumberFormatException e) {
-            showError("Ungültiger Port", "Port muss eine Zahl sein!");
+            ChatServer.getInstance().start(port);
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Server gestartet");
+            alert.setHeaderText("Multi-Room Server aktiv");
+            alert.setContentText("Server läuft auf Port " + port + "\nClients können sich verbinden!");
+            alert.showAndWait();
+        } catch (Exception e) {
+            showError("Server-Fehler", "Konnte Server nicht starten: " + e.getMessage());
         }
     }
 
-    private void connectToServer(String host, int port) {
-        ChattyApp.showWaitingScreen();
-
-        new Thread(() -> {
-            try {
-                connection.connectAsClient(host, port);
-
-                ConnectionInfo.getInstance().setConnection(host, port, false);
-
-                javafx.application.Platform.runLater(() -> {
-                    ChattyApp.showChatScreen();
-                });
-
-            } catch (Exception e) {
-                javafx.application.Platform.runLater(() -> {
-                    showError("Verbindung fehlgeschlagen",
-                            "Konnte keine Verbindung zu " + host + ":" + port + " herstellen.\n\n" +
-                                    "Fehler: " + e.getMessage() + "\n\n" +
-                                    "Tipp: Starte zuerst eine Instanz im Server-Modus!");
-                    ChattyApp.showConnectionScreen();
-                });
-            }
-        }).start();
-    }
-
-    private void startServerMode(int port) {
-        ChattyApp.showWaitingScreen();
-
-        new Thread(() -> {
-            try {
-                connection.connectAsServer(port);
-
-                String clientAddress = connection.getRemoteAddress();
-                ConnectionInfo.getInstance().setConnection(clientAddress, port, true);
-
-                javafx.application.Platform.runLater(() -> {
-                    ChattyApp.showChatScreen();
-                });
-
-            } catch (Exception e) {
-                javafx.application.Platform.runLater(() -> {
-                    showError("Server-Modus fehlgeschlagen",
-                            "Konnte Server nicht auf Port " + port + " starten.\n\n" +
-                                    "Fehler: " + e.getMessage() + "\n\n" +
-                                    "Tipp: Port ist möglicherweise bereits in Benutzung. Versuche einen anderen Port!");
-                    ChattyApp.showConnectionScreen();
-                });
-            }
-        }).start();
+    private void showRoomList(String username, String host, int port) {
+        RoomListScreenController.setConnectionInfo(username, host, port);
+        Stage stage = (Stage) usernameInput.getScene().getWindow();
+        ChattyApp.showRoomListScreen(stage);
     }
 
     private void showError(String title, String message) {
@@ -130,4 +88,6 @@ public class ConnectionScreenController {
         alert.setContentText(message);
         alert.showAndWait();
     }
+
+
 }

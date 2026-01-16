@@ -2,23 +2,23 @@ package at.ac.hcw.chatty.controller;
 
 import at.ac.hcw.chatty.ChattyApp;
 import at.ac.hcw.chatty.model.ConnectionInfo;
-import at.ac.hcw.chatty.service.ChatConnection;
+import at.ac.hcw.chatty.service.ChatClient;
+
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.stage.Stage;
 
 public class ChatScreenController {
     @FXML
-    private Label connectionLabel;
+    private Label roomLabel;
 
     @FXML
     private VBox chatContainer;
@@ -32,28 +32,82 @@ public class ChatScreenController {
     @FXML
     private ScrollPane chatScrollPane;
 
-    private ChatConnection connection;
-
     @FXML
-    public void initialize() {
-        connection = ChatConnection.getInstance();
+    private FlowPane stickerPanel;
 
-        // Set connection info
-        ConnectionInfo info = ConnectionInfo.getInstance();
-        connectionLabel.setText("Verbunden: " + info.getDisplayString());
+    private ChatClient client;
+    private String roomName;
+    private String username;
 
-        // Setup callbacks
-        connection.setOnMessageReceived(this::addReceivedMessage);
-        connection.setOnDisconnected(this::handleDisconnected);
+    private static final String[] STICKERS = {
+            "😀", "😂", "😍", "😎", "🤔", "😢", "😡", "👍",
+            "👎", "❤️", "🔥", "⭐", "✅", "❌", "🎉", "🚀"
+    };
 
-        // Start receiving messages
-        connection.startReceiving();
+    public void setRoomInfo(String room, String user) {
+        this.roomName = room;
+        this.username = user;
+        initialize();
+    }
 
-        // Bind scroll to bottom
-        chatScrollPane.vvalueProperty().bind(chatContainer.heightProperty());
+    private void initialize() {
+        roomLabel.setText("Room: " + roomName + " | " + username);
 
-        // Focus on input field
-        messageInput.requestFocus();
+        // Setup sticker panel
+        setupStickerPanel();
+
+        // Connect to room
+        connectToRoom();
+    }
+
+    private void setupStickerPanel() {
+        stickerPanel.setHgap(5);
+        stickerPanel.setVgap(5);
+
+        for (String sticker : STICKERS) {
+            Button stickerBtn = new Button(sticker);
+            stickerBtn.setStyle(
+                    "-fx-font-size: 20px; " +
+                            "-fx-background-color: transparent; " +
+                            "-fx-cursor: hand; " +
+                            "-fx-padding: 5;"
+            );
+            stickerBtn.setOnAction(e -> sendSticker(sticker));
+            stickerPanel.getChildren().add(stickerBtn);
+        }
+    }
+
+    private void connectToRoom() {
+        client = new ChatClient();
+
+        new Thread(() -> {
+            try {
+                client.connect(
+                        RoomListScreenController.getHost(),
+                        RoomListScreenController.getPort(),
+                        roomName,
+                        username
+                );
+
+
+                javafx.application.Platform.runLater(() -> {
+                    client.setOnMessageReceived(this::addReceivedMessage);
+                    client.setOnDisconnected(this::handleDisconnected);
+                    client.startReceiving();
+
+                    statusLabel.setText("Status: ● Verbunden");
+                    statusLabel.setStyle("-fx-text-fill: #059669; -fx-font-weight: bold;");
+                });
+
+            } catch (Exception e) {
+                javafx.application.Platform.runLater(() -> {
+                    showError("Verbindung fehlgeschlagen",
+                            "Konnte nicht zu Raum verbinden.\nStelle sicher, dass der Server läuft!");
+                    statusLabel.setText("Status: ✗ Nicht verbunden");
+                    statusLabel.setStyle("-fx-text-fill: #dc2626;");
+                });
+            }
+        }).start();
     }
 
     @FXML
@@ -61,24 +115,89 @@ public class ChatScreenController {
         String message = messageInput.getText().trim();
         if (message.isEmpty()) return;
 
-        connection.sendMessage(message);
-        addSentMessage(message);
+        client.sendMessage(message);
+        addSentMessage(username + ": " + message);
         messageInput.clear();
     }
 
+    private void sendSticker(String sticker) {
+        client.sendSticker(sticker);
+        addSentMessage(username + " sent: STICKER:" + sticker);
+    }
+
     @FXML
-    private void handleDisconnect() {
-        connection.disconnect();
-        ChattyApp.showConnectionScreen();
+    private void handleLeaveRoom() {
+        client.disconnect();
+        Stage stage = (Stage) messageInput.getScene().getWindow();
+        stage.close();
     }
 
     private void addReceivedMessage(String message) {
-        HBox messageBox = createMessageBubble(message, false);
-        chatContainer.getChildren().add(messageBox);
+        if (message.contains("STICKER:")) {
+            String sticker = message.split("STICKER:")[1];
+            addStickerBubble(message.split(" sent:")[0], sticker, false);
+        } else if (message.startsWith(">>>") || message.startsWith("<<<")) {
+            addSystemMessage(message);
+        } else {
+            HBox messageBox = createMessageBubble(message, false);
+            chatContainer.getChildren().add(messageBox);
+        }
     }
 
     private void addSentMessage(String message) {
-        HBox messageBox = createMessageBubble(message, true);
+        if (message.contains("STICKER:")) {
+            String sticker = message.split("STICKER:")[1];
+            addStickerBubble(username, sticker, true);
+        } else {
+            HBox messageBox = createMessageBubble(message, true);
+            chatContainer.getChildren().add(messageBox);
+        }
+    }
+
+    private void addStickerBubble(String sender, String sticker, boolean isSent) {
+        HBox messageBox = new HBox();
+        messageBox.setAlignment(isSent ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+
+        VBox bubble = new VBox(5);
+        bubble.setPadding(new Insets(10));
+        bubble.setAlignment(Pos.CENTER);
+        bubble.setStyle(
+                "-fx-background-color: " + (isSent ? "#2563eb" : "#e5e7eb") + "; " +
+                        "-fx-background-radius: 10;"
+        );
+
+        if (!isSent) {
+            Label senderLabel = new Label(sender);
+            senderLabel.setFont(Font.font("Arial", 10));
+            senderLabel.setStyle("-fx-font-weight: bold;");
+            senderLabel.setTextFill(Color.web("#6b7280"));
+            bubble.getChildren().add(senderLabel);
+        }
+
+        Label stickerLabel = new Label(sticker);
+        stickerLabel.setFont(Font.font("Arial", 40));
+
+        Label timeLabel = new Label(getCurrentTime());
+        timeLabel.setFont(Font.font("Arial", 9));
+        timeLabel.setTextFill(Color.web(isSent ? "#bfdbfe" : "#6b7280"));
+
+        bubble.getChildren().addAll(stickerLabel, timeLabel);
+        messageBox.getChildren().add(bubble);
+
+        chatContainer.getChildren().add(messageBox);
+    }
+
+    private void addSystemMessage(String message) {
+        HBox messageBox = new HBox();
+        messageBox.setAlignment(Pos.CENTER);
+        messageBox.setPadding(new Insets(5));
+
+        Label systemLabel = new Label(message);
+        systemLabel.setFont(Font.font("Arial", 11));
+        systemLabel.setTextFill(Color.web("#6b7280"));
+        systemLabel.setStyle("-fx-font-style: italic;");
+
+        messageBox.getChildren().add(systemLabel);
         chatContainer.getChildren().add(messageBox);
     }
 
@@ -125,10 +244,14 @@ public class ChatScreenController {
         statusLabel.setStyle("-fx-text-fill: #dc2626; -fx-font-weight: bold;");
         messageInput.setDisable(true);
 
-        Alert alert = new Alert(Alert.AlertType.WARNING);
-        alert.setTitle("Chatty - Verbindung unterbrochen");
-        alert.setHeaderText("Verbindung unterbrochen");
-        alert.setContentText("Der Chat-Partner hat die Verbindung beendet.");
+        addSystemMessage("⚠️ Verbindung zum Server verloren");
+    }
+
+    private void showError(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Chatty - " + title);
+        alert.setHeaderText(title);
+        alert.setContentText(message);
         alert.showAndWait();
     }
 }

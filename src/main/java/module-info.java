@@ -1,6 +1,7 @@
 module at.ac.hcw.chatty {
     requires javafx.controls;
     requires javafx.fxml;
+    requires java.desktop;
 
     exports at.ac.hcw.chatty;
 

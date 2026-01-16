@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+            fx:controller="at.ac.hcw.chatty.controller.RoomListScreenController"
+            style="-fx-background-color: #f9fafb;">
+
+    <top>
+        <VBox spacing="15" style="-fx-background-color: #2563eb; -fx-padding: 20;">
+            <Label text="💬 Chatty Rooms"
+                   style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: white;"/>
+            <Label fx:id="usernameLabel" text="Eingeloggt als: ..."
+                   style="-fx-font-size: 12px; -fx-text-fill: #bfdbfe;"/>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="15" style="-fx-padding: 20;">
+            <Label text="Verfügbare Räume"
+                   style="-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+
+            <ListView fx:id="roomListView" prefHeight="300"
+                      style="-fx-font-size: 13px;"/>
+
+            <Button text="Raum beitreten" onAction="#handleJoinRoom"
+                    prefWidth="660" prefHeight="40"
+                    style="-fx-background-color: #10b981; -fx-text-fill: white; 
+                           -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+
+            <Separator/>
+
+            <Label text="Neuen Raum erstellen"
+                   style="-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #374151;"/>
+
+            <HBox spacing="10">
+                <TextField fx:id="newRoomInput" promptText="Raum-Name eingeben..."
+                           prefWidth="540" HBox.hgrow="ALWAYS"
+                           style="-fx-font-size: 13px; -fx-padding: 10px;"/>
+                <Button text="Erstellen" onAction="#handleCreateRoom"
+                        prefWidth="110" prefHeight="40"
+                        style="-fx-background-color: #f59e0b; -fx-text-fill: white; 
+                               -fx-font-size: 13px; -fx-font-weight: bold; -fx-cursor: hand;"/>
+            </HBox>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox alignment="CENTER" style="-fx-background-color: #e5e7eb; -fx-padding: 12;">
+            <Label text="💡 Du kannst mehrere Räume gleichzeitig öffnen!"
+                   style="-fx-font-size: 11px; -fx-text-fill: #6b7280; -fx-font-style: italic;"/>
+        </HBox>
+    </bottom>
+</BorderPane>
